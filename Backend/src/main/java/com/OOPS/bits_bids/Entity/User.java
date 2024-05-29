@@ -29,7 +29,7 @@ public class User {
     @Column(name = "hostel")
     private String hostel;
 
-    private long Balance = 10000;
+    private long credits = 10000;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "user_wishlist",
