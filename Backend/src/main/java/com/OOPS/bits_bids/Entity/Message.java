@@ -10,7 +10,7 @@ public class Message {
 
     @Id
     @GeneratedValue
-    private Long m_id;
+    private Long mId;
 
     @ManyToOne
     @JoinColumn(name = "lender_id")
@@ -26,4 +26,7 @@ public class Message {
 
     @Column(name = "message")
     private String content;
+
+    @Column(name = "lender_message")
+    private Boolean sentByLender;
 }
