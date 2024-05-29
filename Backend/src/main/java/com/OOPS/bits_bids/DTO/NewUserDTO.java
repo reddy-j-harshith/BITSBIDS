@@ -11,9 +11,9 @@ public class NewUserDTO {
     @NotBlank(message = "BITS mail is mandatory")
     @Email(message = "Invalid email format")
     @Pattern(regexp = "f20\\d{6}@hyderabad\\.bits-pilani\\.ac\\.in", message = "Invalid bits_mail format")
-    private String bits_mail;
+    private String bitsMail;
 
-    private String Password;
+    private String password;
 
     private String firstName;
 

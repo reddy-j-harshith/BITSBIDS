@@ -33,7 +33,7 @@ public class LoginController {
     public ResponseEntity<?> signIn(@Valid @RequestBody NewUserDTO newUser) {
         try {
             // Extract bits_id from bits_mail
-            Matcher matcher = BITS_MAIL_PATTERN.matcher(newUser.getBits_mail());
+            Matcher matcher = BITS_MAIL_PATTERN.matcher(newUser.getBitsMail());
             if (!matcher.matches()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid bits_mail format.");
             }
@@ -42,7 +42,7 @@ public class LoginController {
             // Create and save new user
             User user = new User();
             user.setBitsId(bitsId);
-            user.setMail(newUser.getBits_mail());
+            user.setMail(newUser.getBitsMail());
             user.setPassword(passwordEncoder.encode(newUser.getPassword()));
             user.setHostel(newUser.getHostel());
             user.setFirstName(newUser.getFirstName());
@@ -54,8 +54,6 @@ public class LoginController {
             return ResponseEntity.status(HttpStatus.CREATED).body("New user has been created.");
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("The username already exists.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during sign-up.");
         }
     }
 
