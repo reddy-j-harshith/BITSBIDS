@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: bits-bids
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bitsbids
+    username: root
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ORM Mapping
+  jpa:
+    hibernate:
+      ddl-auto: update # or validate
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+
+#  h2:
+#    console:
+#      enabled: true
+#
+#  datasource:
+#    url: jdbc:h2:mem:bits-bids
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
+#
+#  # ORM Mapping
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    show-sql: true
