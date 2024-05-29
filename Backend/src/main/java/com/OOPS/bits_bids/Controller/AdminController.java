@@ -9,10 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 
 @RestController
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final UserRepository userRepository;
-
     @PutMapping("/add-credits")
     public ResponseEntity<?> addCreditsToUser(@Valid @RequestBody CreditDTO creditDTO){
 
@@ -34,6 +32,11 @@ public class AdminController {
         userRepository.save(user);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Credits added successfully.");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> getTestAPI3(Principal principal){
+        return ResponseEntity.ok("Admin API accessed by " + principal.getName());
     }
 
 }

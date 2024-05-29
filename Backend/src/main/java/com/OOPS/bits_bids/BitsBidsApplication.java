@@ -23,12 +23,12 @@ public class BitsBidsApplication {
 		return args -> {
 			User manager = new User();
 			manager.setBitsId("manager@BITSBIDS");
-			manager.setPassword(passwordEncoder.encode("password"));
+			manager.setPassword(passwordEncoder.encode("manager"));
 			manager.setRoles("ROLE_MANAGER");
 
 			User admin = new User();
 			admin.setBitsId("admin@BITSBIDS");
-			admin.setPassword(passwordEncoder.encode("password"));
+			admin.setPassword(passwordEncoder.encode("admin"));
 			admin.setRoles("ROLE_MANAGER,ROLE_ADMIN");
 
 			userRepository.saveAll(List.of(admin, manager));
