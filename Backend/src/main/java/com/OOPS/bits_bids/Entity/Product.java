@@ -3,8 +3,8 @@ package com.OOPS.bits_bids.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -18,7 +18,7 @@ public class Product {
     private String name;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Image> images = new HashSet<>();
+    private List<Image> images = new ArrayList<>();
 
     @Lob
     private String description;
@@ -34,7 +34,7 @@ public class Product {
     @JoinTable(name = "product_users",
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> users = new HashSet<>();
+    private List<User> users = new ArrayList<>();
 
     @OneToOne(mappedBy = "product")
     private Bid bid;

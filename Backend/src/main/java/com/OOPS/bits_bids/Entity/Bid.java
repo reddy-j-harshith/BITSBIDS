@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -35,7 +35,7 @@ public class Bid {
     @JoinTable(name = "bid_bidder",
             joinColumns = @JoinColumn(name = "bid_id"),
             inverseJoinColumns = @JoinColumn(name = "bidder_id"))
-    private Set<User> bidders = new HashSet<>();
+    private List<User> bidders = new ArrayList<>();
 
     @OneToOne
     private Product product;

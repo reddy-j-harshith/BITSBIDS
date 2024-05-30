@@ -3,8 +3,8 @@ package com.OOPS.bits_bids.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -35,10 +35,10 @@ public class User {
     @JoinTable(name = "user_wishlist",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private Set<Product> wishList = new HashSet<>();
+    private List<Product> wishList = new ArrayList<>();
 
     @ManyToMany(mappedBy = "bidders")
-    private Set<Bid> participatedBids = new HashSet<>();
+    private List<Bid> participatedBids = new ArrayList<>();
 
     private String roles;
 }
