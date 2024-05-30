@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -34,11 +36,11 @@ public class User {
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "user_wishlist",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private List<Product> wishList = new ArrayList<>();
+            inverseJoinColumns = @JoinColumn(name = "bid_id"))
+    private List<Bid> wishList = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "bidders")
-    private List<Bid> participatedBids = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<UserBid> userBids = new HashSet<>();
 
     private String roles;
 }

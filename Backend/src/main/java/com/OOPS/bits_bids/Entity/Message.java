@@ -21,8 +21,8 @@ public class Message {
     private User borrower;
 
     @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @JoinColumn(name = "bid_id")
+    private Bid bid;
 
     @Column(name = "message")
     private String content;

@@ -31,11 +31,11 @@ public class Bid {
     @Column(name = "increments")
     private int increments;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "bid_bidder",
-            joinColumns = @JoinColumn(name = "bid_id"),
-            inverseJoinColumns = @JoinColumn(name = "bidder_id"))
-    private List<User> bidders = new ArrayList<>();
+    @OneToMany(mappedBy = "bid", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<UserBid> userBids = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "wishList" ,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<User> usersWishList = new ArrayList<>();
 
     @OneToOne
     private Product product;
