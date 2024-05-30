@@ -53,6 +53,7 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .userDetailsService(userJPAConfig)
+                .csrf(AbstractHttpConfigurer::disable) // csrf disable temporarily for testing purposes. withDefaults() static method is to be used.
                 .formLogin(withDefaults())
                 .httpBasic(withDefaults())
                 .build();
