@@ -17,9 +17,6 @@ public class Product {
     @Column(name = "p_name")
     private String name;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Image> images = new ArrayList<>();
-
     @Lob
     private String description;
 
@@ -30,13 +27,10 @@ public class Product {
     @JoinColumn(name = "lender_id")
     private User seller;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "product_users",
-            joinColumns = @JoinColumn(name = "product_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<User> users = new ArrayList<>();
-
     @OneToOne(mappedBy = "product")
     private Bid bid;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Image> images = new ArrayList<>();
 
 }
