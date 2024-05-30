@@ -6,11 +6,10 @@ import com.OOPS.bits_bids.Entity.User;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,10 +20,10 @@ public class UserController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/profile/{id}")
-    public ProfileResponse UserProfile(@PathVariable String id){
+    @GetMapping("/profile/{bitsId}")
+    public ProfileResponse UserProfile(@PathVariable String bitsId){
         User user = userRepository.
-                findByBitsId(id)
+                findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
         ProfileResponse profile = new ProfileResponse();
@@ -37,21 +36,28 @@ public class UserController {
         return profile;
     }
 
-    @GetMapping("user/wishlist/{id}")
-    public List<Product> getWishList(@PathVariable String id){
+    @GetMapping("/wishlist/{bitsId}")
+    public List<Product> getWishList(@PathVariable String bitsId){
         User user = userRepository.
-                findByBitsId(id)
+                findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
          return user.getWishList();
     }
 
-    @GetMapping("/user/your-bids/{id}")
-    public List<Bid> getActiveBids(@PathVariable String id){
+    @GetMapping("/your-bids/{bitsId}")
+    public List<Bid> getActiveBids(@PathVariable String bitsId){
         User user = userRepository.
-                findByBitsId(id)
+                findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
         return user.getParticipatedBids();
     }
+
+    @PostMapping("/add-to-wishlist/{bid_id}")
+    public ResponseEntity<?> addToWishList(@PathVariable Long bid_id){
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("The item has been added to wishlist!");
+    }
+
 }
