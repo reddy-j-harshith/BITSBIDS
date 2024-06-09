@@ -39,7 +39,19 @@ public class UserController {
                 findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
-         return user.getWishList();
+        return user.getWishList();
     }
 
+    @PostMapping("/wishlist/{bitsId}/{bidId}")
+    public void addToWishList(@PathVariable String bitsId, @PathVariable Long bidId){
+        User user = userRepository.
+                findByBitsId(bitsId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
+
+        Bid bid = new Bid();
+        bid.setBidId(bidId);
+
+        user.getWishList().add(bid);
+        userRepository.save(user);
+    }
 }

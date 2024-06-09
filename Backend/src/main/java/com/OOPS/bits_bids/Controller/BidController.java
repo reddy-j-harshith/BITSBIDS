@@ -1,11 +1,12 @@
 package com.OOPS.bits_bids.Controller;
 
-import com.OOPS.bits_bids.DTO.MakeBidDTO;
+import com.OOPS.bits_bids.DTO.ProductDTO;
 import com.OOPS.bits_bids.Entity.Bid;
+import com.OOPS.bits_bids.Entity.Image;
+import com.OOPS.bits_bids.Entity.Product;
 import com.OOPS.bits_bids.Entity.User;
-import com.OOPS.bits_bids.Entity.UserBid;
 import com.OOPS.bits_bids.Repository.BidRepository;
-import com.OOPS.bits_bids.Repository.UserBidRepository;
+import com.OOPS.bits_bids.Repository.ProductRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,41 +15,55 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
-@RequestMapping("/bid")
+@RequestMapping("/product")
 @RequiredArgsConstructor
 public class BidController {
 
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final BidRepository bidRepository;
-    private final UserBidRepository userBidRepository;
 
-    @PostMapping("/make-bid")
-    public ResponseEntity<?> makeBid(@RequestBody MakeBidDTO makeBidDTO){
-        User user = userRepository.findByBitsId(makeBidDTO.getBitsId()).orElseThrow(() -> new RuntimeException("User not found"));
-        Bid bid = bidRepository.findByBidId(makeBidDTO.getBidId()).orElseThrow(() -> new RuntimeException("Bid not found"));
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadProduct(@RequestBody ProductDTO productDTO){
+        User seller = userRepository.findByBitsId(productDTO.getSellerBitsId()).orElseThrow(() -> new RuntimeException("Seller not found"));
 
-        UserBid userBid = new UserBid();
-        UserBid.UserBidId userBidId = new UserBid.UserBidId();
-        userBidId.setUserId(makeBidDTO.getBitsId());
-        userBidId.setBidId(makeBidDTO.getBidId());
-        userBid.setId(userBidId);
-        userBid.setUser(user);
-        userBid.setBid(bid);
-        userBid.setBidAmount(makeBidDTO.getBidAmount());
-        userBid.setBidTime(LocalDateTime.now());
+        Product product = new Product();
+        product.setName(productDTO.getName());
+        product.setDescription(productDTO.getDescription());
+        product.setBasePrice(productDTO.getBasePrice());
+        product.setSeller(seller);
 
-        user.getUserBids().add(userBid);
-        bid.getUserBids().add(userBid);
+        Bid bid = new Bid();
+        bid.setStartDate(LocalDateTime.now());
+        bid.setDuration(productDTO.getBidDuration());
+        bid.setIncrements(productDTO.getBidIncrements());
+        bid.setProduct(product);
 
-        userRepository.save(user);
+        product.setBid(bid);
+
+        List<Image> images = new ArrayList<>();
+        for (MultipartFile file : productDTO.getImages()) {
+            Image image = new Image();
+            image.setFilePath(file.getOriginalFilename()); // You need to implement the logic for saving the file and getting its path
+            image.setProduct(product);
+            images.add(image);
+        }
+
+        product.setImages(images);
+
+        productRepository.save(product);
         bidRepository.save(bid);
-        userBidRepository.save(userBid);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("You have successfully made the bid");
+        // Start the timer for the bid
+        // You need to implement the logic for starting the timer and handling the end of the bid
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
     }
-
 }
