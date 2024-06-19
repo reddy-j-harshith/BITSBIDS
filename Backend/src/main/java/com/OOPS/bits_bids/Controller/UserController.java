@@ -1,10 +1,12 @@
 package com.OOPS.bits_bids.Controller;
 
 import com.OOPS.bits_bids.Entity.Bid;
+import com.OOPS.bits_bids.Entity.Product;
 import com.OOPS.bits_bids.Entity.User;
 import com.OOPS.bits_bids.Entity.UserBid;
 import com.OOPS.bits_bids.Repository.BidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
+import com.OOPS.bits_bids.Response.ProductResponse;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -12,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -47,30 +50,47 @@ public class UserController {
         return user.getWishList();
     }
 
-    @PostMapping("/wishlist/{bitsId}/{bidId}")
-    public void addToWishList(@PathVariable String bitsId, @PathVariable Long bidId) throws Exception {
-        User user = userRepository.
-                findByBitsId(bitsId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
+    @PostMapping("/wishlist/{bidId}")
+    public void addToWishList(@PathVariable Long bidId) throws Exception {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
 
+        User user = userRepository.
+                findByBitsId(currentUserName)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
         if(user.equals(bidRepository.findByBidId(bidId).orElseThrow(() -> new Exception("Bid is not found!")).getProduct().getSeller()))
             throw new RuntimeException("You cannot add your own product to wishlist");
 
-        Bid bid = new Bid();
-        bid.setBidId(bidId);
+        Bid bid = bidRepository.findByBidId(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
 
         user.getWishList().add(bid);
+        bid.getUsersWishList().add(user);
+
+        bidRepository.save(bid);
         userRepository.save(user);
     }
 
     @GetMapping("/get-participated")
-    public List<UserBid> getParticipatedBids(){
+    public List<ProductResponse> getParticipatedBids(){
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
 
         User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getUserBids();
+        List<ProductResponse> list = new ArrayList<>();
+        for(UserBid userBid : user.getUserBids()){
+            Product product = userBid.getBid().getProduct();
+            ProductResponse productResponse = new ProductResponse();
+            productResponse.setPId(product.getPid());
+            productResponse.setPName(product.getName());
+            productResponse.setImages(product.getImages());
+            productResponse.setHighest(userBid.getBid().getHighestBid());
+            productResponse.setBid(userBid.getBidAmount());
+
+            list.add(productResponse);
+        }
+
+        return list;
     }
 }
