@@ -1,5 +1,6 @@
 package com.OOPS.bits_bids.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class UserBid {
 
     @ManyToOne
     @MapsId("userId")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
@@ -27,8 +29,6 @@ public class UserBid {
 
     @Column(name = "bid_time")
     private LocalDateTime bidTime;
-
-    // Constructors, getters, setters
 
     @SuppressWarnings("JpaDataSourceORMInspection")
     @Embeddable
