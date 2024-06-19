@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -48,7 +49,10 @@ public class BidController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid JSON format for product");
         }
 
-        User seller = userRepository.findByBitsId(productDTO.getSellerBitsId())
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+
+        User seller = userRepository.findByBitsId(currentUserName)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
 
         Product product = new Product();
@@ -103,37 +107,63 @@ public class BidController {
         // Save product
 
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
     }
 
-    @PostMapping("/bid/{bitsId}/{bidId}/{bidAmount}")
-    ResponseEntity<?> placeBid(@PathVariable String bitsId, @PathVariable Long bidId, @PathVariable Long bidAmount){
-        User user = userRepository.findByBitsId(bitsId).orElseThrow(() -> new RuntimeException("User not found"));
-        Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
-
+    @PostMapping("/bid/{bidId}/{bidAmount}")
+    ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
 
-        if(!currentUserName.equalsIgnoreCase(bitsId)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You cannot bid for others!");
-        } else if(bid.isActiveStatus()){
+        User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
+        Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
+
+
+        if(bid.isActiveStatus()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
         } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
-        } else if(bitsId.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
+        } else if(currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
+        } else if(user.getCredits() < bidAmount){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
+        } else if (bidAmount < bid.getProduct().getBasePrice()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the base price");
+        } else if(bidAmount % bid.getIncrements() != 0){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be in multiples of increments");
         }
 
-        UserBid userBid = new UserBid();
-        userBid.setBid(bid);
-        userBid.setUser(user);
 
-        bid.setHighestBid(bidAmount);
-        bidRepository.save(bid);
 
-        userBid.setBidAmount(bidAmount);
-        userBid.setBidTime(LocalDateTime.now());
-        userBidRepository.save(userBid);
+        UserBid.UserBidId id = new UserBid.UserBidId();
+        id.setUserId(user.getBitsId());
+        id.setBidId(bidId);
+        Optional<UserBid> existingUserBid = userBidRepository.findById(id);
+        if (existingUserBid.isPresent()) {
+            // Update the existing entity
+            UserBid userBid = existingUserBid.get();
+            userBid.setBid(bid);
+            userBid.setUser(user);
+            userBid.setBidAmount(bidAmount);
+            userBid.setBidTime(LocalDateTime.now());
+            bid.setHighestBid(bidAmount);
+            userBidRepository.save(userBid);
+        } else {
+            // Save a new entity
+            UserBid userBid = new UserBid();
+            userBid.setBid(bid);
+            userBid.setUser(user);
+            userBid.setBidAmount(bidAmount);
+            userBid.setBidTime(LocalDateTime.now());
+            bid.setHighestBid(bidAmount);
+            userBidRepository.save(userBid);
+
+            bid.getUserBids().add(userBid);
+            bidRepository.save(bid);
+
+            user.getUserBids().add(userBid);
+            userRepository.save(user);
+        }
 
         return ResponseEntity.ok("Bid placed successfully");
     }
