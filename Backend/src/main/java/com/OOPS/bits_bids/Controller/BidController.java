@@ -100,13 +100,6 @@ public class BidController {
         }
 
         product.setImages(imageList);
-
-        // Save bid first
-
-
-        // Save product
-
-
         return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
     }
 
