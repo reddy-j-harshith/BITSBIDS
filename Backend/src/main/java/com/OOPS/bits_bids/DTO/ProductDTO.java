@@ -11,7 +11,6 @@ public class ProductDTO {
     private String name;
     private String description;
     private double basePrice;
-    private String sellerBitsId;
     private List<MultipartFile> images;
     private int bidDuration; // Duration in hours
     private int bidIncrements;
