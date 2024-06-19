@@ -2,6 +2,7 @@ package com.OOPS.bits_bids.Controller;
 
 import com.OOPS.bits_bids.Entity.Bid;
 import com.OOPS.bits_bids.Entity.User;
+import com.OOPS.bits_bids.Repository.BidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final BidRepository bidRepository;
 
     @GetMapping("/profile/{bitsId}")
     public ProfileResponse UserProfile(@PathVariable String bitsId){
@@ -43,10 +45,14 @@ public class UserController {
     }
 
     @PostMapping("/wishlist/{bitsId}/{bidId}")
-    public void addToWishList(@PathVariable String bitsId, @PathVariable Long bidId){
+    public void addToWishList(@PathVariable String bitsId, @PathVariable Long bidId) throws Exception {
         User user = userRepository.
                 findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
+
+
+        if(user.equals(bidRepository.findByBidId(bidId).orElseThrow(() -> new Exception("Bid is not found!")).getProduct().getSeller()))
+            throw new RuntimeException("You cannot add your own product to wishlist");
 
         Bid bid = new Bid();
         bid.setBidId(bidId);

@@ -27,7 +27,7 @@ public class Product {
     @JoinColumn(name = "lender_id")
     private User seller;
 
-    @OneToOne(mappedBy = "product")
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "product")
     private Bid bid;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
