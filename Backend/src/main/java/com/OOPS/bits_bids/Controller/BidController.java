@@ -1,22 +1,17 @@
 package com.OOPS.bits_bids.Controller;
 
 import com.OOPS.bits_bids.DTO.ProductDTO;
-import com.OOPS.bits_bids.Entity.Bid;
-import com.OOPS.bits_bids.Entity.Image;
-import com.OOPS.bits_bids.Entity.Product;
-import com.OOPS.bits_bids.Entity.User;
+import com.OOPS.bits_bids.Entity.*;
 import com.OOPS.bits_bids.Repository.BidRepository;
 import com.OOPS.bits_bids.Repository.ProductRepository;
+import com.OOPS.bits_bids.Repository.UserBidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,6 +31,7 @@ public class BidController {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final BidRepository bidRepository;
+    private final UserBidRepository userBidRepository;
 
     private final Path rootLocation = Paths.get("uploaded-images");
 
@@ -107,4 +103,30 @@ public class BidController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
     }
+
+    @PostMapping("/bid/{bitsId}/{bidId}/{bidAmount}")
+    ResponseEntity<?> placeBid(@PathVariable String bitsId, @PathVariable Long bidId, @PathVariable Long bidAmount){
+        User user = userRepository.findByBitsId(bitsId).orElseThrow(() -> new RuntimeException("User not found"));
+        Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
+
+        if (bid.getHighestBid() >= bidAmount) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
+        } else if(bitsId.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
+        }
+
+        UserBid userBid = new UserBid();
+        userBid.setBid(bid);
+        userBid.setUser(user);
+
+        bid.setHighestBid(bidAmount);
+        bidRepository.save(bid);
+
+        userBid.setBidAmount(bidAmount);
+        userBid.setBidTime(LocalDateTime.now());
+        userBidRepository.save(userBid);
+
+        return ResponseEntity.ok("Bid placed successfully");
+    }
+
 }

@@ -41,6 +41,5 @@ public class UserBid {
         @Column(name = "bid_id")
         private Long bidId;
 
-        // Constructors, getters, setters, equals, and hashCode
     }
 }
