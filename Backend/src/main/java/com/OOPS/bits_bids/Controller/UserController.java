@@ -2,10 +2,13 @@ package com.OOPS.bits_bids.Controller;
 
 import com.OOPS.bits_bids.Entity.Bid;
 import com.OOPS.bits_bids.Entity.User;
+import com.OOPS.bits_bids.Entity.UserBid;
 import com.OOPS.bits_bids.Repository.BidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,5 +62,15 @@ public class UserController {
 
         user.getWishList().add(bid);
         userRepository.save(user);
+    }
+
+    @GetMapping("/get-participated")
+    public List<UserBid> getParticipatedBids(){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+
+        User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getUserBids();
     }
 }

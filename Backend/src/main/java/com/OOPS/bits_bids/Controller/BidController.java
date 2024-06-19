@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -109,7 +111,14 @@ public class BidController {
         User user = userRepository.findByBitsId(bitsId).orElseThrow(() -> new RuntimeException("User not found"));
         Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
 
-        if (bid.getHighestBid() >= bidAmount) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = authentication.getName();
+
+        if(!currentUserName.equalsIgnoreCase(bitsId)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You cannot bid for others!");
+        } else if(bid.isActiveStatus()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
+        } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
         } else if(bitsId.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
