@@ -20,8 +20,8 @@ public class UserConfig implements UserDetails {
                 .stream(user
                         .getRoles()
                         .split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .toList();
+                .map(SimpleGrantedAuthority::new)
+                .toList();
     }
 
     @Override

@@ -26,7 +26,4 @@ public class Message {
 
     @Column(name = "message")
     private String content;
-
-    @Column(name = "lender_message")
-    private Boolean sentByLender;
 }

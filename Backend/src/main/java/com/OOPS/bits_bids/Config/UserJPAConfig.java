@@ -15,9 +15,9 @@ public class UserJPAConfig implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String bitsId) throws UsernameNotFoundException {
-    return userRepository
-            .findById(bitsId)
-            .map(UserConfig::new)
-            .orElseThrow(() -> new UsernameNotFoundException("Please login / sign-up with your bits mail."));
+        return userRepository
+                .findById(bitsId)
+                .map(UserConfig::new)
+                .orElseThrow(() -> new UsernameNotFoundException("Please login / sign-up with your bits mail."));
     }
 }
