@@ -40,6 +40,6 @@ public class Bid {
     @ManyToMany(mappedBy = "wishList" ,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<User> usersWishList = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Product product;
 }

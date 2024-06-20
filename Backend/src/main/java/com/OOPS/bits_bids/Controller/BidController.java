@@ -72,7 +72,6 @@ public class BidController {
         bid.setIncrements(productDTO.getBidIncrements());
         bid.setProduct(product);
         bid.setActiveStatus(true);
-
         product.setBid(bid);
 
         // Ensure the storage directory exists
@@ -106,15 +105,19 @@ public class BidController {
         }
 
         product.setImages(imageList);
-
         productRepository.save(product); // This will also save the bid due to cascading
-
         return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteProducts(){
+        productRepository.deleteAll();
+        return ResponseEntity.ok("All products deleted successfully");
     }
 
     // Bidding Logic
     @PostMapping("/bid/{bidId}/{bidAmount}")
-    ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
+    public ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
 
