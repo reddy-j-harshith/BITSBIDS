@@ -106,7 +106,7 @@ public class BidController {
 
         product.setImages(imageList);
         productRepository.save(product); // This will also save the bid due to cascading
-        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
     }
 
     @DeleteMapping("/delete")
@@ -128,17 +128,20 @@ public class BidController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password, Try again!");
         } else if(!bid.isActiveStatus()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
-        } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
         } else if(currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
         } else if (bidAmount < bid.getProduct().getBasePrice()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the base price");
-        } else if(bidAmount % bid.getIncrements() != 0){
+        } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
+        } else if((bidAmount - (bid.getHighestBid() == null ? bid.getProduct().getBasePrice() : bid.getHighestBid())) % bid.getIncrements() != 0){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be in multiples of increments");
         } else if(user.getCredits() < bidAmount){
-            if((!bid.getHighestBidder().equals(user)) && user.getCredits() >= (bid.getHighestBid() == null ? 0 : bid.getHighestBid()) + bidAmount)
+            if(bid.getHighestBidder() != null && (bid.getHighestBidder().equals(user)) && user.getCredits() <= bidAmount - bid.getHighestBid())
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
+            else{
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
+            }
         }
 
         UserBid.UserBidId id = new UserBid.UserBidId();

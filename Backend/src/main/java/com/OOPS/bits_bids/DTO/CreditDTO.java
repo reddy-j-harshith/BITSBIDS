@@ -12,6 +12,5 @@ public class CreditDTO {
     @Pattern(regexp = "f20\\d{6}", message = "Invalid bits_id format")
     private String bitsId;
 
-    @Positive(message = "Credits to add must be a positive number")
     private Long addCredits;
 }
