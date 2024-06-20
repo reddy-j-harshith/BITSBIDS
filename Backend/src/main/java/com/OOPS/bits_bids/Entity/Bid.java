@@ -19,7 +19,10 @@ public class Bid {
     @Column(name = "top_bid")
     private Long highestBid;
 
-    @Column(name = "status")
+    @ManyToOne
+    private User highestBidder;
+
+    @Column(name = "active_status")
     private boolean activeStatus;
 
     @Column(name = "start_date")

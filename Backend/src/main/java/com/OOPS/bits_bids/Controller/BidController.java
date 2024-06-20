@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,10 +36,11 @@ public class BidController {
     private final ProductRepository productRepository;
     private final BidRepository bidRepository;
     private final UserBidRepository userBidRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private final Path rootLocation = Paths.get("uploaded-images");
 
-    @PostMapping(value="/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProduct(@RequestPart("product") String productJson,
                                            @RequestPart("images") List<MultipartFile> images) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -55,6 +57,9 @@ public class BidController {
         User seller = userRepository.findByBitsId(currentUserName)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
 
+        if(productDTO.getBasePrice() <= 0)
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Base price cannot be negative!");
+
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setDescription(productDTO.getDescription());
@@ -66,6 +71,9 @@ public class BidController {
         bid.setDuration(productDTO.getBidDuration());
         bid.setIncrements(productDTO.getBidIncrements());
         bid.setProduct(product);
+        bid.setActiveStatus(true);
+
+        product.setBid(bid);
 
         // Ensure the storage directory exists
         try {
@@ -74,8 +82,6 @@ public class BidController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not initialize storage");
         }
 
-        productRepository.save(product);
-        bidRepository.save(bid);
         List<Image> imageList = new ArrayList<>();
         for (MultipartFile file : images) {
             try {
@@ -100,63 +106,74 @@ public class BidController {
         }
 
         product.setImages(imageList);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
+
+        productRepository.save(product); // This will also save the bid due to cascading
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully");
     }
 
+    // Bidding Logic
     @PostMapping("/bid/{bidId}/{bidAmount}")
-    ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount){
+    ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = authentication.getName();
 
         User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
         Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
 
-
-        if(bid.isActiveStatus()){
+        if(!passwordEncoder.matches(password, user.getPassword())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password, Try again!");
+        } else if(!bid.isActiveStatus()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
         } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
         } else if(currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
-        } else if(user.getCredits() < bidAmount){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
         } else if (bidAmount < bid.getProduct().getBasePrice()){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the base price");
         } else if(bidAmount % bid.getIncrements() != 0){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be in multiples of increments");
+        } else if(user.getCredits() < bidAmount){
+            if((!bid.getHighestBidder().equals(user)) && user.getCredits() >= (bid.getHighestBid() == null ? 0 : bid.getHighestBid()) + bidAmount)
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
         }
-
-
 
         UserBid.UserBidId id = new UserBid.UserBidId();
         id.setUserId(user.getBitsId());
         id.setBidId(bidId);
         Optional<UserBid> existingUserBid = userBidRepository.findById(id);
-        if (existingUserBid.isPresent()) {
-            // Update the existing entity
-            UserBid userBid = existingUserBid.get();
-            userBid.setBid(bid);
-            userBid.setUser(user);
-            userBid.setBidAmount(bidAmount);
-            userBid.setBidTime(LocalDateTime.now());
-            bid.setHighestBid(bidAmount);
-            userBidRepository.save(userBid);
+
+        if (bid.getHighestBid() != null && bid.getHighestBidder() != null){
+            // Give credits for the former highest bidder.
+            bid.getHighestBidder().setCredits(bid.getHighestBidder().getCredits() + bid.getHighestBid());
+            // Remove credits for the new highest bidder.
+            user.setCredits(bid.getHighestBidder().getCredits() - bidAmount);
         } else {
-            // Save a new entity
-            UserBid userBid = new UserBid();
-            userBid.setBid(bid);
-            userBid.setUser(user);
-            userBid.setBidAmount(bidAmount);
-            userBid.setBidTime(LocalDateTime.now());
-            bid.setHighestBid(bidAmount);
-            userBidRepository.save(userBid);
-
-            bid.getUserBids().add(userBid);
-            bidRepository.save(bid);
-
-            user.getUserBids().add(userBid);
-            userRepository.save(user);
+            user.setCredits(user.getCredits() - bidAmount);
         }
+
+        UserBid userBid = existingUserBid.orElseGet(UserBid::new);
+        // Set new values for the UserBid entity.
+        userBid.setBid(bid);
+        userBid.setUser(user);
+        userBid.setBidAmount(bidAmount);
+        userBid.setBidTime(LocalDateTime.now());
+        userBidRepository.save(userBid);
+
+        // Set the highest bidder and highest bid for the bid.
+        bid.setHighestBidder(user);
+        bid.setHighestBid(bidAmount);
+        bidRepository.save(bid);
+
+        // Add new UserBid entity if it is new.
+        if(existingUserBid.isPresent()) {
+            bid.getUserBids().add(userBid);
+            user.getUserBids().add(userBid);
+        }
+
+        // Save updated values for the bid and user.
+        bidRepository.save(bid);
+        userRepository.save(user);
 
         return ResponseEntity.ok("Bid placed successfully");
     }
