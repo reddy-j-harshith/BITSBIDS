@@ -116,6 +116,7 @@ public class BidController {
     }
 
     // Bidding Logic
+    @SuppressWarnings("IfStatementWithIdenticalBranches")
     @PostMapping("/bid/{bidId}/{bidAmount}")
     public ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
