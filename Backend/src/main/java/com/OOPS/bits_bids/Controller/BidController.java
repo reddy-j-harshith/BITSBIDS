@@ -22,10 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/product")
@@ -37,6 +37,8 @@ public class BidController {
     private final BidRepository bidRepository;
     private final UserBidRepository userBidRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     private final Path rootLocation = Paths.get("uploaded-images");
 
@@ -105,8 +107,26 @@ public class BidController {
         }
 
         product.setImages(imageList);
-        productRepository.save(product); // This will also save the bid due to cascading
+        productRepository.save(product); // This will also save the bid due to cascading.
+        long delay = productDTO.getBidDuration();
+        scheduler.schedule(() -> endBid(bid.getBidId()), delay, TimeUnit.SECONDS);
+
         return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
+    }
+
+    void endBid(Long bidId) {
+        // Fetch the latest version of the bid from the database
+        Bid latestBid = bidRepository.findById(bidId)
+                .orElseThrow(() -> new RuntimeException("Bid not found"));
+
+        if(latestBid.getHighestBidder() != null) {
+            User user = userRepository.findByBitsId(latestBid.getProduct().getSeller().getBitsId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setCredits(user.getCredits() + latestBid.getHighestBid());
+            userRepository.save(user);
+        }
+        latestBid.setActiveStatus(false);
+        bidRepository.save(latestBid);
     }
 
     @DeleteMapping("/delete")
@@ -116,7 +136,6 @@ public class BidController {
     }
 
     // Bidding Logic
-    @SuppressWarnings("IfStatementWithIdenticalBranches")
     @PostMapping("/bid/{bidId}/{bidAmount}")
     public ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -138,11 +157,7 @@ public class BidController {
         } else if((bidAmount - (bid.getHighestBid() == null ? bid.getProduct().getBasePrice() : bid.getHighestBid())) % bid.getIncrements() != 0){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be in multiples of increments");
         } else if(user.getCredits() < bidAmount){
-            if(bid.getHighestBidder() != null && (bid.getHighestBidder().equals(user)) && user.getCredits() <= bidAmount - bid.getHighestBid())
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
-            else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
-            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
         }
 
         UserBid.UserBidId id = new UserBid.UserBidId();

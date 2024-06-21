@@ -34,12 +34,12 @@ public class Bid {
     @Column(name = "increments")
     private int increments;
 
-    @OneToMany(mappedBy = "bid", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "bid", cascade = CascadeType.ALL)
     private List<UserBid> userBids = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "wishList" ,cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "wishList" ,cascade = CascadeType.ALL)
     private List<User> usersWishList = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL)
     private Product product;
 }

@@ -30,7 +30,7 @@ public class Product {
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "product")
     private Bid bid;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Image> images = new ArrayList<>();
 
 }
