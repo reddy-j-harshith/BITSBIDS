@@ -7,6 +7,7 @@ import com.OOPS.bits_bids.Repository.ProductRepository;
 import com.OOPS.bits_bids.Repository.UserBidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -73,7 +74,8 @@ public class BidController {
         bid.setDuration(productDTO.getBidDuration());
         bid.setIncrements(productDTO.getBidIncrements());
         bid.setProduct(product);
-        bid.setActiveStatus(true);
+//        bid.setActiveStatus(true);
+        bid.setStatus(Bid.Status.OPEN);
         product.setBid(bid);
 
         // Ensure the storage directory exists
@@ -115,17 +117,15 @@ public class BidController {
     }
 
     void endBid(Long bidId) {
-        // Fetch the latest version of the bid from the database
         Bid latestBid = bidRepository.findById(bidId)
                 .orElseThrow(() -> new RuntimeException("Bid not found"));
 
-        if(latestBid.getHighestBidder() != null) {
-            User user = userRepository.findByBitsId(latestBid.getProduct().getSeller().getBitsId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            user.setCredits(user.getCredits() + latestBid.getHighestBid());
-            userRepository.save(user);
+        if (latestBid.getHighestBidder() != null) {
+            User seller = latestBid.getProduct().getSeller();
+            seller.setCredits(seller.getCredits() + latestBid.getHighestBid());
+            userRepository.save(seller);
         }
-        latestBid.setActiveStatus(false);
+        latestBid.setStatus(Bid.Status.CLOSED);
         bidRepository.save(latestBid);
     }
 
@@ -144,20 +144,26 @@ public class BidController {
         User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
         Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
 
-        if(!passwordEncoder.matches(password, user.getPassword())){
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password, Try again!");
-        } else if(!bid.isActiveStatus()){
+        } else if (bid.getStatus() == Bid.Status.CLOSED) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
-        } else if(currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
+        } else if (bid.getStatus() == Bid.Status.REMOVED) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid has been removed");
+        } else if (currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
-        } else if (bidAmount < bid.getProduct().getBasePrice()){
+        } else if (bidAmount < bid.getProduct().getBasePrice()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the base price");
         } else if (bid.getHighestBid() != null && bid.getHighestBid() >= bidAmount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the highest bid");
-        } else if((bidAmount - (bid.getHighestBid() == null ? bid.getProduct().getBasePrice() : bid.getHighestBid())) % bid.getIncrements() != 0){
+        } else if ((bidAmount - (bid.getHighestBid() == null ? bid.getProduct().getBasePrice() : bid.getHighestBid())) % bid.getIncrements() != 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be in multiples of increments");
-        } else if(user.getCredits() < bidAmount){
+        } else if (user.getCredits() < bidAmount) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient credits");
+        }
+
+        if (bid.getStatus() == Bid.Status.OPEN) {
+            bid.setStatus(Bid.Status.BIDDERS_ENGAGED);
         }
 
         UserBid.UserBidId id = new UserBid.UserBidId();
@@ -165,39 +171,57 @@ public class BidController {
         id.setBidId(bidId);
         Optional<UserBid> existingUserBid = userBidRepository.findById(id);
 
-        if (bid.getHighestBid() != null && bid.getHighestBidder() != null){
-            // Give credits for the former highest bidder.
+        if (bid.getHighestBid() != null && bid.getHighestBidder() != null) {
             bid.getHighestBidder().setCredits(bid.getHighestBidder().getCredits() + bid.getHighestBid());
-            // Remove credits for the new highest bidder.
-            user.setCredits(bid.getHighestBidder().getCredits() - bidAmount);
+            user.setCredits(user.getCredits() - bidAmount);
         } else {
             user.setCredits(user.getCredits() - bidAmount);
         }
 
         UserBid userBid = existingUserBid.orElseGet(UserBid::new);
-        // Set new values for the UserBid entity.
         userBid.setBid(bid);
         userBid.setUser(user);
         userBid.setBidAmount(bidAmount);
         userBid.setBidTime(LocalDateTime.now());
         userBidRepository.save(userBid);
 
-        // Set the highest bidder and highest bid for the bid.
         bid.setHighestBidder(user);
         bid.setHighestBid(bidAmount);
         bidRepository.save(bid);
 
-        // Add new UserBid entity if it is new.
-        if(existingUserBid.isPresent()) {
+        if (existingUserBid.isEmpty()) {
             bid.getUserBids().add(userBid);
             user.getUserBids().add(userBid);
         }
 
-        // Save updated values for the bid and user.
         bidRepository.save(bid);
         userRepository.save(user);
 
         return ResponseEntity.ok("Bid placed successfully");
     }
 
+    @PostConstruct
+    public void initScheduledTasks() {
+        List<Bid> allBids = bidRepository.findAll();
+        for (Bid bid : allBids) {
+            if (bid.getStatus() == Bid.Status.BIDDERS_ENGAGED) {
+                rollbackBid(bid);
+            } else if (bid.getStatus() == Bid.Status.OPEN) {
+                bid.setStatus(Bid.Status.REMOVED);
+                bidRepository.save(bid);
+            }
+        }
+    }
+
+    void rollbackBid(Bid bid) {
+        if (bid.getHighestBidder() != null) {
+            User highestBidder = bid.getHighestBidder();
+            highestBidder.setCredits(highestBidder.getCredits() + bid.getHighestBid());
+            userRepository.save(highestBidder);
+        }
+        bid.setHighestBidder(null);
+        bid.setHighestBid(null);
+        bid.setStatus(Bid.Status.REMOVED);
+        bidRepository.save(bid);
+    }
 }

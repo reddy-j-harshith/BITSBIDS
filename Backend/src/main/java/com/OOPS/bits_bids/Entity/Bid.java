@@ -22,9 +22,6 @@ public class Bid {
     @ManyToOne
     private User highestBidder;
 
-    @Column(name = "active_status")
-    private boolean activeStatus;
-
     @Column(name = "start_date")
     private LocalDateTime startDate;
 
@@ -42,4 +39,11 @@ public class Bid {
 
     @OneToOne(cascade = CascadeType.ALL)
     private Product product;
+
+    public enum Status {
+        OPEN, BIDDERS_ENGAGED, CLOSED, REMOVED
+    }
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 }
