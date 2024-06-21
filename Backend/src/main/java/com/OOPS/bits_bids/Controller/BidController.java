@@ -173,26 +173,26 @@ public class BidController {
 
         if (bid.getHighestBid() != null && bid.getHighestBidder() != null) {
             bid.getHighestBidder().setCredits(bid.getHighestBidder().getCredits() + bid.getHighestBid());
-            user.setCredits(user.getCredits() - bidAmount);
-        } else {
-            user.setCredits(user.getCredits() - bidAmount);
         }
 
-        UserBid userBid = existingUserBid.orElseGet(UserBid::new);
-        userBid.setBid(bid);
-        userBid.setUser(user);
+        user.setCredits(user.getCredits() - bidAmount);
+
+        UserBid userBid;
+        if (existingUserBid.isPresent()) {
+            userBid = existingUserBid.get();
+        } else {
+            userBid = new UserBid();
+            userBid.setId(id);
+            userBid.setUser(user);
+            userBid.setBid(bid);
+        }
         userBid.setBidAmount(bidAmount);
         userBid.setBidTime(LocalDateTime.now());
+
         userBidRepository.save(userBid);
 
         bid.setHighestBidder(user);
         bid.setHighestBid(bidAmount);
-        bidRepository.save(bid);
-
-        if (existingUserBid.isEmpty()) {
-            bid.getUserBids().add(userBid);
-            user.getUserBids().add(userBid);
-        }
 
         bidRepository.save(bid);
         userRepository.save(user);
