@@ -9,9 +9,12 @@ import com.OOPS.bits_bids.Repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,6 +41,8 @@ public class BidController {
     private final BidRepository bidRepository;
     private final UserBidRepository userBidRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
+    private final Environment environment;
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
@@ -113,6 +118,8 @@ public class BidController {
         long delay = productDTO.getBidDuration();
         scheduler.schedule(() -> endBid(bid.getBidId()), delay, TimeUnit.SECONDS);
 
+        sendMail(seller.getMail(), "Product uploaded successfully", "Your product has been uploaded with ID: " + product.getPid());
+
         return ResponseEntity.status(HttpStatus.CREATED).body("Product uploaded successfully. Bid ID: " + bid.getBidId());
     }
 
@@ -124,6 +131,8 @@ public class BidController {
             User seller = latestBid.getProduct().getSeller();
             seller.setCredits(seller.getCredits() + latestBid.getHighestBid());
             userRepository.save(seller);
+            sendMail(latestBid.getHighestBidder().getMail(), "You've won the bid", "Congratulations! You've won the bid for the product.");
+            sendMail(seller.getMail(), "Your product has been sold", "Your product has been sold to " + latestBid.getHighestBidder().getBitsId() + " for " + latestBid.getHighestBid());
         }
         latestBid.setStatus(Bid.Status.CLOSED);
         bidRepository.save(latestBid);
@@ -173,6 +182,7 @@ public class BidController {
 
         if (bid.getHighestBid() != null && bid.getHighestBidder() != null) {
             bid.getHighestBidder().setCredits(bid.getHighestBidder().getCredits() + bid.getHighestBid());
+            sendMail(bid.getHighestBidder().getMail(), "You've been outbid", "Someone has placed a higher bid on the product " + bid.getProduct().getName() + ". Your credits have been refunded.");
         }
 
         user.setCredits(user.getCredits() - bidAmount);
@@ -223,5 +233,14 @@ public class BidController {
         bid.setHighestBid(null);
         bid.setStatus(Bid.Status.REMOVED);
         bidRepository.save(bid);
+    }
+
+    private void sendMail(String to, String subject, String text) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(environment.getProperty("spring.mail.username"));
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(text);
+        mailSender.send(message);
     }
 }
