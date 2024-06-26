@@ -132,7 +132,7 @@ public class BidController {
             seller.setCredits(seller.getCredits() + latestBid.getHighestBid());
             userRepository.save(seller);
             sendMail(latestBid.getHighestBidder().getMail(), "You've won the bid", "Congratulations! You've won the bid for the product.");
-            sendMail(seller.getMail(), "Your product has been sold", "Your product has been sold to " + latestBid.getHighestBidder().getBitsId() + " for " + latestBid.getHighestBid());
+            sendMail(seller.getMail(), "Your product has been sold", "Your product has been sold to " + latestBid.getHighestBidder().getBitsId() + " for " + latestBid.getHighestBid() + " credits.");
         }
         latestBid.setStatus(Bid.Status.CLOSED);
         bidRepository.save(latestBid);
