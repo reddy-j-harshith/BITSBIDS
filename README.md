@@ -8,7 +8,7 @@ An Online bid Market place for BITSIANS
 - Support for email notifications
 - Users can engage in an auction for a product
 - Connected with a MySQL Database
-- Passwords were encrypted using bcrypt ****
+- Passwords were encrypted using bcrypt
 
 ## Running Frontend 
 All these commands are to be run from /frontend folder
