@@ -15,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +47,10 @@ public class BidController {
 
     private final Path rootLocation = Paths.get("uploaded-images");
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/upload/{bitsId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProduct(@RequestPart("product") String productJson,
-                                           @RequestPart("images") List<MultipartFile> images) {
+                                           @RequestPart("images") List<MultipartFile> images,
+                                           @PathVariable String bitsId) {
         ObjectMapper objectMapper = new ObjectMapper();
         ProductDTO productDTO;
         try {
@@ -59,10 +59,7 @@ public class BidController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid JSON format for product");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
-
-        User seller = userRepository.findByBitsId(currentUserName)
+        User seller = userRepository.findByBitsId(bitsId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
 
         if(productDTO.getBasePrice() <= 0)
@@ -145,12 +142,13 @@ public class BidController {
     }
 
     // Bidding Logic
-    @PostMapping("/bid/{bidId}/{bidAmount}")
-    public ResponseEntity<?> placeBid(@PathVariable Long bidId, @PathVariable Long bidAmount, @RequestParam String password) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
+    @PostMapping("/bid/{bitsId}/{bidId}/{bidAmount}")
+    public ResponseEntity<?> placeBid(@PathVariable Long bidId,
+                                      @PathVariable Long bidAmount,
+                                      @RequestParam String password,
+                                      @PathVariable String bitsId) {
 
-        User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByBitsId(bitsId).orElseThrow(() -> new RuntimeException("User not found"));
         Bid bid = bidRepository.findById(bidId).orElseThrow(() -> new RuntimeException("Bid not found"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -159,7 +157,7 @@ public class BidController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid is closed");
         } else if (bid.getStatus() == Bid.Status.REMOVED) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid has been removed");
-        } else if (currentUserName.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
+        } else if (bitsId.equalsIgnoreCase(bid.getProduct().getSeller().getBitsId())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Seller cannot bid on their own product");
         } else if (bidAmount < bid.getProduct().getBasePrice()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bid amount should be greater than the base price");
