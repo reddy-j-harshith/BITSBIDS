@@ -9,7 +9,6 @@ import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.ProductResponse;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -50,13 +49,11 @@ public class UserController {
         return user.getWishList();
     }
 
-    @PostMapping("/wishlist/{bidId}")
-    public void addToWishList(@PathVariable Long bidId) throws Exception {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
-
+    @PostMapping("/wishlist/{bitsId}/{bidId}")
+    public void addToWishList(@PathVariable Long bidId,
+                              @PathVariable String bitsId) throws Exception {
         User user = userRepository.
-                findByBitsId(currentUserName)
+                findByBitsId(bitsId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found. Please try again"));
 
         if(user.equals(bidRepository.findByBidId(bidId).orElseThrow(() -> new Exception("Bid is not found!")).getProduct().getSeller()))
@@ -71,13 +68,10 @@ public class UserController {
         userRepository.save(user);
     }
 
-    @GetMapping("/get-participated")
-    public List<ProductResponse> getParticipatedBids(){
+    @GetMapping("/get-participated/{bitsId}")
+    public List<ProductResponse> getParticipatedBids(@PathVariable String bitsId){
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserName = authentication.getName();
-
-        User user = userRepository.findByBitsId(currentUserName).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByBitsId(bitsId).orElseThrow(() -> new RuntimeException("User not found"));
         List<ProductResponse> list = new ArrayList<>();
         for(UserBid userBid : user.getUserBids()){
             Product product = userBid.getBid().getProduct();
