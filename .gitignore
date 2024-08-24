@@ -1,0 +1,4 @@
+uploaded-images/*
+/uploaded-images/
+/path/
+newBackend/

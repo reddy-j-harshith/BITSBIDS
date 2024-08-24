@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: bits-bids
+
+
+
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bitsbids
+    username: root
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ORM Mapping
+  jpa:
+    hibernate:
+      ddl-auto: update # or validate
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 10MB
+      enabled: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: reddy.j.harshith@gmail.com
+    password: lmos vbpo adfy rowo
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+logging:
+  level:
+    org:
+      springframework:
+        security=ERROR:
+#  h2:
+#    console:
+#      enabled: true
+#
+#  datasource:
+#    url: jdbc:h2:mem:bits-bids
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
+#
+#  # ORM Mapping
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#    database-platform: org.hibernate.dialect.H2Dialect
+#    show-sql: true
