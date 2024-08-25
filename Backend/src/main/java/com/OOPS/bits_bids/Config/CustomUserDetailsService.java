@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByBitsId("f20220233")
+        User user = userRepository.findByBitsId(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return new UserConfig(user); // Assuming UserConfig implements UserDetails
     }
