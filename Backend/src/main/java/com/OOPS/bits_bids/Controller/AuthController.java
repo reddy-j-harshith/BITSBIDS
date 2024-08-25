@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -116,7 +118,9 @@ public class AuthController {
     @GetMapping("/secure-endpoint")
     @PreAuthorize("hasRole('USER')")
     public String secureEndpoint() {
-        return "Access granted to secure endpoint!";
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        return "Access granted to secure endpoint! Username: " + username;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
