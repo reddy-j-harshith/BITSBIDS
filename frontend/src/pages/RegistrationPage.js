@@ -30,7 +30,7 @@ const RegistrationPage = () => {
   const handleSubmit = async (e) => {
     try {
       e.preventDefault();
-      let response = await fetch(`${baseURL}/api/register/`, {
+      let response = await fetch(`${baseURL}/auth/sign-up`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

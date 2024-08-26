@@ -31,10 +31,10 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Apply CORS configuration
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/authenticate", "/auth/refresh-token") // Disable CSRF for these endpoints
+                        .ignoringRequestMatchers("/auth/authenticate", "/auth/refresh-token", "/auth/sign-up") // Disable CSRF for these endpoints
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/authenticate", "/auth/refresh-token").permitAll()
+                        .requestMatchers("/auth/authenticate", "/auth/refresh-token", "/auth/sign-up").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
