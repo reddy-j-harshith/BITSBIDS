@@ -40,13 +40,12 @@ const HomePage = () => {
       <div className="product-grid">
         {products.map(product => (
           <div key={product.pId} className="product-card">
-            <h2>{product.pName}</h2>
-            <p>{product.pDesc}</p>
-            <p>Base Price: {product.basePrice}</p>
-            <p>Bid Duration: {product.bidDuration} hours</p>
             {product.imageUrls && product.imageUrls.length > 0 && (
               <img src={`${baseURL}${product.imageUrls[0]}`} alt={product.pName} />
             )}
+            <h2>{product.pName}</h2>
+            <p>Base Price: {product.basePrice}</p>
+            <p>Bid Duration: {product.bidDuration} hours</p>
           </div>
         ))}
       </div>

@@ -30,6 +30,16 @@ const Header = () => {
           &#9776; {/* This is a hamburger icon */}
         </button>
         <div className={`navbar-right ${menuOpen ? 'show' : ''}`}>
+          {user ? (
+            <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
+          ) : (
+            null
+          )}
+          {user ? (
+            <NavLink to="/upload" className={({ isActive }) => isActive ? "active" : ""}>Upload</NavLink>
+          ) : (
+            null
+          )}
           {(admin && user) && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? "active" : ""}>Panel</NavLink>
           )}
