@@ -1,14 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
-import './RegistrationPage.css'; 
+import './RegistrationPage.css';
 import Config from '../Config';
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
+    bitsMail: '',
     password: '',
+    firstName: '',
+    lastName: '',
+    hostel: ''
   });
 
   const handleChange = (e) => {
@@ -27,7 +29,7 @@ const RegistrationPage = () => {
 
   const handleSubmit = async (e) => {
     try {
-        e.preventDefault();
+      e.preventDefault();
       let response = await fetch(`${baseURL}/api/register/`, {
         method: 'POST',
         headers: {
@@ -44,36 +46,29 @@ const RegistrationPage = () => {
         navigate('/login');
       }
     } catch (error) {
-      setError("Your credentials are not unique");
+      setError("your credentials are not unique");
     }
   };
 
   const handleLoginButtonClick = () => {
-    navigate("/login"); // Navigate to login page
+    navigate("/"); // Navigate to login page
   };
-  
+
   return (
     <div className="registration-form-container">
       <h2 style={{ textAlign: "center", color: 'white' }}>Register</h2>
-      {error && <p className="error-message">{error}</p>} {/* Display error message */}
+      {error && <p className="error-message">{error}</p>}
       <div className='col'>
         <form onSubmit={handleSubmit}>
           <input
-            type="text"
-            name="username"
-            placeholder='Username'
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
-          <input
             type="email"
-            name="email"
-            placeholder='Email'
-            value={formData.email}
+            name="bitsMail"
+            placeholder='BITS Mail'
+            value={formData.bitsMail}
             onChange={handleChange}
             required
           />
+
           <input
             type="password"
             name="password"
@@ -82,13 +77,42 @@ const RegistrationPage = () => {
             onChange={handleChange}
             required
           />
-          <input type="submit" value="Register" className='button'/>
+
+          <input
+            type="text"
+            name="firstName"
+            placeholder='First Name'
+            value={formData.firstName}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="text"
+            name="lastName"
+            placeholder='Last Name'
+            value={formData.lastName}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            type="text"
+            name="hostel"
+            placeholder='Hostel'
+            value={formData.hostel}
+            onChange={handleChange}
+            required
+          />
+
+          <input type="submit" value="Register" className='button' />
         </form>
+
         <div className="divider">
           <span className="divider-text">Already have an account?</span>
         </div>
         <form onSubmit={handleLoginButtonClick}>
-          <input type="submit" value="Login" className='button'/>
+          <input type="submit" value="Login" className='button' />
         </form>
       </div>
     </div>
