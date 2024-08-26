@@ -18,7 +18,7 @@ const LoginPage = () => {
         <h2 style={{ textAlign: "center", color: 'white' }}>Login</h2>
         <div className="col">
           <form onSubmit={loginUser}>
-            <input type="text" name="username" placeholder="Username" required />
+            <input type="text" name="username" placeholder="Bits ID" required />
             <input type="password" name="password" placeholder="Password" required />
             <input type="submit" value="Login" className='button'/>
           </form>

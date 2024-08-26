@@ -1,5 +1,6 @@
-package com.OOPS.bits_bids.Config;
+package com.OOPS.bits_bids.Service;
 
+import com.OOPS.bits_bids.Config.UserConfig;
 import com.OOPS.bits_bids.Entity.User;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import lombok.Data;

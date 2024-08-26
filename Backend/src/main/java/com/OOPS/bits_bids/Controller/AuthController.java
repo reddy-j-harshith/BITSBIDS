@@ -1,12 +1,13 @@
 package com.OOPS.bits_bids.Controller;
 
-import com.OOPS.bits_bids.Config.CustomUserDetailsService;
+import com.OOPS.bits_bids.Service.CustomUserDetailsService;
 import com.OOPS.bits_bids.Config.UserConfig;
 import com.OOPS.bits_bids.DTO.*;
 import com.OOPS.bits_bids.Entity.User;
 import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.AuthenticationResponse;
 import com.OOPS.bits_bids.Security.JwtUtil;
+import com.OOPS.bits_bids.Service.MailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
+    private final MailService mailService;
 
     private static final Pattern BITS_MAIL_PATTERN = Pattern.compile("(f20\\d{6})@hyderabad\\.bits-pilani\\.ac\\.in");
 
@@ -52,6 +54,8 @@ public class AuthController {
 
         final String access = jwtUtil.generateToken((UserConfig) userDetails);
         final String refresh = jwtUtil.generateRefreshToken((UserConfig) userDetails);
+
+        mailService.sendMail(authenticationDTO.getUsername() + "@hyderabad.bits-pilani.ac.in", "Login Alert", "You have logged in to your account.");
 
         return ResponseEntity.ok(new AuthenticationResponse(access, refresh));
     }

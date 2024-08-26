@@ -1,6 +1,6 @@
 package com.OOPS.bits_bids.Security;
 
-import com.OOPS.bits_bids.Config.CustomUserDetailsService;
+import com.OOPS.bits_bids.Service.CustomUserDetailsService;
 import com.OOPS.bits_bids.Config.UserConfig;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
