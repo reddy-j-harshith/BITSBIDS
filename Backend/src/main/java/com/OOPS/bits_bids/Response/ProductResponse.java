@@ -1,6 +1,5 @@
 package com.OOPS.bits_bids.Response;
 
-import com.OOPS.bits_bids.Entity.Image;
 import lombok.Data;
 
 import java.util.List;
@@ -9,13 +8,11 @@ import java.util.List;
 public class ProductResponse {
 
     private Long pId;
-
     private String pName;
-
-    private List<Image> images;
-
-    private Long highest;
-
-    private Long bid;
-
+    private String pDesc;
+    private Double basePrice;
+    private Long highestBid;
+    private Integer bidDuration;
+    private Integer bidIncrements;
+    private List<String> imageUrls;
 }

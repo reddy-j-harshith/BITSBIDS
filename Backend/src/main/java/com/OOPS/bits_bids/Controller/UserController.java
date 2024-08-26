@@ -77,10 +77,9 @@ public class UserController {
             ProductResponse productResponse = new ProductResponse();
             productResponse.setPId(product.getPid());
             productResponse.setPName(product.getName());
-            productResponse.setImages(product.getImages());
-            productResponse.setHighest(userBid.getBid().getHighestBid());
-            productResponse.setBid(userBid.getBidAmount());
-
+            productResponse.setHighestBid(userBid.getBid().getHighestBid());
+            productResponse.setPDesc(product.getDescription());
+            productResponse.setBasePrice(product.getBasePrice());
             list.add(productResponse);
         }
 

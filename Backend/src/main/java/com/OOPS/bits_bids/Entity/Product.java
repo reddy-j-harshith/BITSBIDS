@@ -3,6 +3,7 @@ package com.OOPS.bits_bids.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,4 +34,6 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Image> images = new ArrayList<>();
 
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
 }

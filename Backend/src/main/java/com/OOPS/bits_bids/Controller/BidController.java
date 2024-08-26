@@ -6,6 +6,7 @@ import com.OOPS.bits_bids.Repository.BidRepository;
 import com.OOPS.bits_bids.Repository.ProductRepository;
 import com.OOPS.bits_bids.Repository.UserBidRepository;
 import com.OOPS.bits_bids.Repository.UserRepository;
+import com.OOPS.bits_bids.Response.ProductResponse;
 import com.OOPS.bits_bids.Service.MailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/product")
@@ -42,6 +44,32 @@ public class BidController {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
 
     private final Path rootLocation = Paths.get("uploaded-images");
+
+    @GetMapping("/latest")
+    public List<ProductResponse> getLatestProducts() {
+        List<Product> products = productRepository.findTop9ByOrderByCreatedDateDesc(); // Example query
+        List<ProductResponse> productResponses = new ArrayList<>();
+
+        for (Product product : products) {
+            ProductResponse response = new ProductResponse();
+            response.setPId(product.getPid());
+            response.setPName(product.getName());
+            response.setPDesc(product.getDescription());
+            response.setBasePrice(product.getBasePrice());
+            response.setBidDuration(product.getBid().getDuration());
+            response.setBidIncrements(product.getBid().getIncrements());
+
+            // Assuming you have a method to generate URLs from image paths
+            List<String> imageUrls = product.getImages().stream()
+                    .map(image -> "/images/" + image.getFilePath())
+                    .collect(Collectors.toList());
+            response.setImageUrls(imageUrls);
+
+            productResponses.add(response);
+        }
+
+        return productResponses;
+    }
 
     @PostMapping(value = "/upload/{bitsId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProduct(@RequestPart("product") String productJson,
@@ -66,6 +94,7 @@ public class BidController {
         product.setDescription(productDTO.getDescription());
         product.setBasePrice(productDTO.getBasePrice());
         product.setSeller(seller);
+        product.setCreatedDate(LocalDateTime.now());
 
         Bid bid = new Bid();
         bid.setStartDate(LocalDateTime.now());
