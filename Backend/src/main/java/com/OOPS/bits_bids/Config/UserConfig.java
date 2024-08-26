@@ -38,6 +38,8 @@ public class UserConfig implements UserDetails {
         return user.getMail();
     }
 
+    public String getRoles() { return user.getRoles(); }
+
     @Override
     public boolean isAccountNonExpired() {
         return UserDetails.super.isAccountNonExpired();

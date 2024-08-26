@@ -13,14 +13,22 @@ export const AuthProvider = ({children}) => {
         const token = localStorage.getItem('authTokens');
         return token ? JSON.parse(token) : null;
     });
+    
+    // Updated user state to include new fields: bitsId, bitsMail, isManager, and isAdmin
     let [user, setUser] = useState(() => {
         const token = localStorage.getItem('authTokens');
-        return token ? jwtDecode(token) : null;
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            return {
+                bitsId: decodedToken.bitsId,
+                bitsMail: decodedToken.bitsMail,
+                isManager: decodedToken.authorities.some(auth => auth.authority === 'ROLE_MANAGER'),
+                isAdmin: decodedToken.authorities.some(auth => auth.authority === 'ROLE_ADMIN'),
+            };
+        }
+        return null;
     });
-    let [admin, setAdmin] = useState(() => {
-        const token = localStorage.getItem('authTokens');
-        return token ? jwtDecode(token).is_staff : false;
-    });
+    
     let [loading, setLoading] = useState(true);
 
     const navigate = useNavigate();
@@ -41,8 +49,13 @@ export const AuthProvider = ({children}) => {
 
         if (response.status === 200) {
             setAuthTokens(data);
-            setUser(jwtDecode(data.access));
-            setAdmin(jwtDecode(data.access).is_staff);
+            const decodedToken = jwtDecode(data.access);
+            setUser({
+                bitsId: decodedToken.bitsId,
+                bitsMail: decodedToken.bitsMail,
+                isManager: decodedToken.authorities.some(auth => auth.authority === 'ROLE_MANAGER'),
+                isAdmin: decodedToken.authorities.some(auth => auth.authority === 'ROLE_ADMIN'),
+            });
             localStorage.setItem('authTokens', JSON.stringify(data));
             navigate('/');
         } else if (response.status === 401) {
@@ -53,7 +66,6 @@ export const AuthProvider = ({children}) => {
     const logoutUser = () => {
         setAuthTokens(null);
         setUser(null);
-        setAdmin(false);
         localStorage.removeItem('authTokens');
         navigate('/login');
     };
@@ -71,8 +83,13 @@ export const AuthProvider = ({children}) => {
 
         if (response.status === 200) {
             setAuthTokens(data);
-            setUser(jwtDecode(data.access));
-            setAdmin(jwtDecode(data.access).is_staff);
+            const decodedToken = jwtDecode(data.access);
+            setUser({
+                bitsId: decodedToken.bitsId,
+                bitsMail: decodedToken.bitsMail,
+                isManager: decodedToken.authorities.some(auth => auth.authority === 'ROLE_MANAGER'),
+                isAdmin: decodedToken.authorities.some(auth => auth.authority === 'ROLE_ADMIN'),
+            });
             localStorage.setItem('authTokens', JSON.stringify(data));
         } else {
             logoutUser();
@@ -103,7 +120,6 @@ export const AuthProvider = ({children}) => {
         user: user,
         loginUser: loginUser,
         logoutUser: logoutUser,
-        admin: admin,
         loading: loading
     };
 

@@ -50,16 +50,16 @@ public class JwtUtil {
     public String generateToken(UserConfig userConfig) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("bitsId", userConfig.getUsername());
-        claims.put("mail", userConfig.getMail());
-        claims.put("password", userConfig.getPassword());
+        claims.put("bitsMail", userConfig.getMail());
+        claims.put("authorities", userConfig.getAuthorities());
         return createToken(claims, userConfig.getUsername());
     }
 
     public String generateRefreshToken(UserConfig userConfig) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("bitsId", userConfig.getUsername());
-        claims.put("mail", userConfig.getMail());
-        claims.put("password", userConfig.getPassword());
+        claims.put("bitsMail", userConfig.getMail());
+        claims.put("authorities", userConfig.getAuthorities());
         return createRefreshToken(claims, userConfig.getUsername());
     }
 

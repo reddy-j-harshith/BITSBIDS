@@ -1,0 +1,119 @@
+/* Style the navbar with a grey background and some padding */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000000;
+    padding: 10px 20px;
+    border-bottom: 1px solid #333;
+    position: relative;
+}
+
+/* Center the title in the navbar */
+.navbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+/* Style the navbar links */
+.navbar a {
+    color: white;
+    text-align: center;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 25px;
+    border-radius: 4px;
+}
+
+/* Style the logo link */
+.navbar a.logo {
+    padding: 0%;
+    font-weight: bold;
+    font-size: 20px;
+    color: orangered;
+}
+
+/* Style the logo image */
+.logo-image {
+    height: 10px;  /* Adjust size as needed */
+}
+
+.navbar a.logo img {
+    height: 90px;  /* Adjust size as needed */
+}
+
+/* Change the background color on mouse-over */
+.navbar a:hover {
+    background-color: #eee;
+    color: black;
+}
+
+/* Style the active/current link */
+.navbar a.active {
+    background-color: #28282B;
+    color: white;
+}
+
+/* Float the link section to the right */
+.navbar-right {
+    margin: 22.5px;
+}
+
+/* Add space below the navbar */
+.space {
+    height: 3rem;
+}
+
+.title-name {
+    color: #eee;
+}
+
+/* Style for the menu button */
+.menu-button {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Hide the navbar-right on mobile by default */
+.navbar-right {
+    display: flex;
+}
+
+/* Add media queries for responsiveness */
+@media screen and (max-width: 500px) {
+    .navbar a {
+        display: block;
+        text-align: left;
+    }
+    
+    .navbar-center {
+        display: none;
+    }
+    
+    .menu-button {
+        display: block;
+    }
+    
+    .navbar-right {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #000000;
+        position: absolute;
+        top: 60px; /* Adjust if needed */
+        left: 0;
+        padding: 10px;
+        border-bottom: 1px solid #333;
+    }
+
+    .navbar-right.show {
+        display: flex;
+    }
+}
