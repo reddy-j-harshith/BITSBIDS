@@ -100,6 +100,8 @@ public class AuthController {
 
         userRepository.save(user);
 
+        mailService.sendMail(newUser.getBitsMail(), "Sign-up", "The account has been created successfully.");
+
         return ResponseEntity.status(HttpStatus.CREATED).body("New user has been created.");
     }
 
