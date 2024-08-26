@@ -9,7 +9,6 @@ import com.OOPS.bits_bids.Repository.UserRepository;
 import com.OOPS.bits_bids.Response.ProductResponse;
 import com.OOPS.bits_bids.Response.ProfileResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
