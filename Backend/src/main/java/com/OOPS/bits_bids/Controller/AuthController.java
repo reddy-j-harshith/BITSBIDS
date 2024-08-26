@@ -50,10 +50,10 @@ public class AuthController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationDTO.getUsername());
 
-        final String jwt = jwtUtil.generateToken((UserConfig) userDetails);
-        final String refreshToken = jwtUtil.generateRefreshToken((UserConfig) userDetails);
+        final String access = jwtUtil.generateToken((UserConfig) userDetails);
+        final String refresh = jwtUtil.generateRefreshToken((UserConfig) userDetails);
 
-        return ResponseEntity.ok(new AuthenticationResponse(jwt, refreshToken));
+        return ResponseEntity.ok(new AuthenticationResponse(access, refresh));
     }
 
     @PostMapping("/refresh-token")

@@ -19,11 +19,11 @@ const Header = () => {
     <div>
       <div className="navbar">
         <NavLink to="/" className="logo">
-          <img src="/Algorithmix1.png" alt="Algorithmix" className="logo-img" />
+          <img src="/BITSBIDS.png" alt="BITSBIDS" className="logo-img" />
         </NavLink>
         <div className="navbar-center">
           <h2 className='title-name'>
-            Algorithmix
+            BITSBIDS
           </h2>
         </div>
         <button className="menu-button" onClick={toggleMenu}>
@@ -33,11 +33,7 @@ const Header = () => {
           {(admin && user) && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? "active" : ""}>Panel</NavLink>
           )}
-          {(admin && user) && (
-            <NavLink to="/problem" className={({ isActive }) => isActive ? "active" : ""}>Problem</NavLink>
-          )}
           <NavLink to="/" className={({ isActive }) => isActive ? "active" : ""} end>Home</NavLink>
-          <NavLink to="/ide" className={({ isActive }) => isActive ? "active" : ""}>IDE</NavLink>
           {user ? (
             <NavLink to="/Login" onClick={logoutUser} className={({ isActive }) => isActive ? "active" : ""}>Logout</NavLink>
           ) : (
